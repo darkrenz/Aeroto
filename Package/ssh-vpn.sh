@@ -13,6 +13,7 @@ LIGHT='\033[0;37m'
 # Getting
 # ==================================================
 # Link Hosting Kalian
+domain=$(cat /etc/xray/domain)
 Ops1="raw.githubusercontent.com/darkrenz/Aeroto/main/Option1"
 Ops2="raw.githubusercontent.com/darkrenz/Aeroto/main/Option2"
 Ops3="raw.githubusercontent.com/darkrenz/Aeroto/main/Option3"
@@ -122,7 +123,7 @@ apt install libssl1.0-dev -y
 apt install dos2unix -y
 
 # set time GMT +7
-ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
+ln -fs /usr/share/zoneinfo/Asia/Philippines /etc/localtime
 
 # set locale
 sed -i 's/AcceptEnv/#AcceptEnv/g' /etc/ssh/sshd_config
@@ -132,22 +133,6 @@ apt-get --reinstall --fix-missing install -y bzip2 gzip coreutils wget screen rs
 echo "clear" >> .profile
 echo "neofetch" >> .profile
 
-# install webserver
-apt -y install nginx php php-fpm php-cli php-mysql libxml-parser-perl
-rm /etc/nginx/sites-enabled/default
-rm /etc/nginx/sites-available/default
-curl https://${Ops1}/nginx.conf > /etc/nginx/nginx.conf
-curl https://${Ops1}/vps.conf > /etc/nginx/conf.d/vps.conf
-sed -i 's/listen = \/var\/run\/php-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php/fpm/pool.d/www.conf
-useradd -m vps;
-mkdir -p /home/vps/public_html
-echo "<?php phpinfo() ?>" > /home/vps/public_html/info.php
-chown -R www-data:www-data /home/vps/public_html
-chmod -R g+rw /home/vps/public_html
-cd /home/vps/public_html
-wget -O /home/vps/public_html/index.html "https://${Packx}/index.html1"
-/etc/init.d/nginx restart
-cd
 
 # install badvpn
 cd
@@ -237,6 +222,17 @@ rm -rf /root/vnstat-2.6
 
 # install stunnel 5 
 cd /root/
+mkdir -p /var/log/xray/
+sudo lsof -t -i tcp:80 -s tcp:listen | sudo xargs kill
+cd /root/
+wget https://raw.githubusercontent.com/acmesh-official/acme.sh/master/acme.sh
+bash acme.sh --install
+rm acme.sh
+cd .acme.sh
+bash acme.sh --register-account -m darkrenz01@gmail.com --set-default-ca --server letsencrypt
+bash acme.sh --issue --standalone -d $domain --force
+bash acme.sh --installcert -d $domain --fullchainpath /etc/xray/xray.crt --keypath /etc/xray/xray.key
+
 wget -q -O stunnel5.zip "https://${Packx}/stunnel5.zip"
 unzip -o stunnel5.zip
 cd /root/stunnel
