@@ -1,0 +1,83 @@
+#!/bin/bash
+
+uninstall_squid_function() {
+  rm -rf /etc/protec
+  sudo sed -i '/^echo \'\.\/toji\' >> ~\/\.bashrc/d' ~/.bashrc
+  echo -e "\e[93mUninstalling Squid...\e[0m"
+  sudo service squid3 stop
+  sudo apt remove --purge -y squid3 squid squid3-common
+  sudo rm /etc/init.d/squid3
+  sudo update-rc.d squid3 remove
+
+  # Additional uninstallation steps
+  cd /var/lib/dpkg/info/
+  sudo rm -rf squid*
+  sudo apt-get clean all
+  sudo apt-get update
+  sudo apt-get update
+  sudo apt-get upgrade
+  
+  echo -e "\e[92mSquid has been uninstalled.\e[0m"
+}
+
+awit_men() {
+  echo -e "\e[94m┌─────────────────────────────────────────────────┐"
+  echo -e "\e[32m    ___ ___ _____ ___  _  _  ___  ___ ___ _  _ "
+  echo "   |   \\_ _|_   _/ _ \| \| |/ _ \/ __/ __| || |"
+  echo "   | |) | |  | || (_) | .\` | (_) \__ \__ \ __ |"
+  echo "   |___/___| |_| \___/|_|\_|\___/|___/___/_||_|"
+  echo -e "\e[94m└─────────────────────────────────────────────────┘\e[0m"
+}
+
+while true; do
+  clear
+  awit_men
+  echo ""
+  echo -e "\e[94m┌─────────────────────────────────────────────────┐"
+  echo -e "  \e[0m[\e[94m01\e[0m] • Display/Change HTTP Port                       "
+  echo -e "  \e[0m[\e[94m02\e[0m] • Payload                                       "
+  echo -e "  \e[0m[\e[94m03\e[0m] • Uninstall Squid                               "
+  echo -e "  \e[0m[\e[94m04\e[0m] • Exit                                          "
+  echo -e "\e[94m└─────────────────────────────────────────────────┘\e[0m"
+
+  read -p "$(echo -e "\e[94mEnter your choice: \e[0m")" choice
+
+  case $choice in
+    1)
+      currentPort=$(grep -E '^http_port ' /etc/squid3/squid.conf | awk '{print $2}')
+      clear
+      awit_men
+      echo ""
+      echo "Squid Port: $currentPort"
+
+      read -p "Enter your desired Squid port: " customPort
+
+      if [[ "$customPort" =~ ^[0-9]+$ && "$customPort" -le 60000 ]]; then
+        sudo sed -i "s/http_port $currentPort/http_port $customPort/g" /etc/squid3/squid.conf
+        sudo service squid3 restart
+        echo -e "\e[92mSquid Port changed to $customPort. Restarted Squid.\e[0m"
+      else
+        echo -e "\e[91mInvalid port. Please enter a valid number, limited to 60000.\e[0m"
+      fi
+      ;;
+    2)
+      clear
+      awit_men
+      echo ""
+      echo -e "CONNECT [host_port] HTTP:www.wattpad.com[split][crlf] HTTP/?0[lf]Host: www.wattpad.com[lf][lf][lf]"
+      sleep 3
+      ;;
+    3)
+      uninstall_squid_function
+      ;;
+    4)
+      echo -e "\e[92mExiting menu...\e[0m"
+      exit 0
+      ;;
+    *)
+      echo -e "\e[91mInvalid choice. Please enter 1, 2, 3, or 4.\e[0m"
+      ;;
+  esac
+
+  read -p "Press Enter to continue..."
+done
